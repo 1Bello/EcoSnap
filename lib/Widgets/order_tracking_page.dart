@@ -10,9 +10,11 @@ class OrderTrackingPage extends StatefulWidget {
 
 class OrderTrackingPageState extends State<OrderTrackingPage> {
   late GoogleMapController mapController;
-  Location location = new Location();
+  Location location = Location();
   LatLng _currentPosition = const LatLng(0, 0);
   bool _isMapInitialized = false;
+  Set<Marker> _markers = {}; // Set to hold markers
+  Map<MarkerId, String> _markerInfo = {}; // Map to hold marker information
 
   @override
   void initState() {
@@ -62,12 +64,67 @@ class OrderTrackingPageState extends State<OrderTrackingPage> {
     } catch (e) {
       print("Error getting location: $e");
     }
+
+    // Add markers after initializing location
+    _addMarkers();
+  }
+
+  void _addMarkers() {
+    // Add markers to the set with associated information
+    _markers.add(
+      Marker(
+        markerId: MarkerId('marker1'),
+        position: LatLng(-33.36413955292655, -70.51871732100369),
+        // Custom icon for the marker
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        onTap: () => _onMarkerTapped(MarkerId('marker1')),
+      ),
+    );
+    _markerInfo[MarkerId('marker1')] = 'Information for Marker 1';
+
+    _markers.add(
+      Marker(
+        markerId: MarkerId('marker2'),
+        position: LatLng(-33.338572320718775, -70.5434051377558),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        onTap: () => _onMarkerTapped(MarkerId('marker2')),
+      ),
+    );
+    _markerInfo[MarkerId('marker2')] = 'Information for Marker 2';
+
+    // Set the state to update the map with the newly added markers
+    setState(() {});
   }
 
   void _onMapCreated(GoogleMapController controller) {
     setState(() {
       mapController = controller;
     });
+  }
+
+  void _onMarkerTapped(MarkerId markerId) {
+    // Retrieve the marker's information
+    String? info = _markerInfo[markerId];
+    if (info != null) {
+      // Display the information in a dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Marker Info'),
+            content: Text(info),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   @override
@@ -85,6 +142,7 @@ class OrderTrackingPageState extends State<OrderTrackingPage> {
               ),
               myLocationEnabled: true,
               myLocationButtonEnabled: true,
+              markers: _markers,
             )
           : Center(child: CircularProgressIndicator()),
     );
